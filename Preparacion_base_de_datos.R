@@ -1,97 +1,241 @@
-#Leer el archivo
-#Subset de las fechas
-#Cambiar el formato 
 library(tidyverse)
+library(reshape)
+library(lubridate)
 
-
-StreetPrice <- read.csv(file = "Data/Street Prices CRE May 2018 - May 2020.csv", 
-                        header = FALSE, col.names = Colnom, encoding = "UTF-8")
-head(StreetPrice)
-#vector con el nombre de las columnas, 12 variables
-#LAtina o algo que permita acentos
 Colnom <-c("Compañia","Permiso", "Nombre Estación", 
            "Dirección", "Tipo", "Tipo2",
            "Precio", "Fecha", "Estado", 
            "Municipio", "Fecha2", "N")
-colnames(StreetPrice)
-           
-#Dos fechas que nos interesan
-# 31 octubre 2018
-# 31 marzo de 2019
-
-DosF <-  StreetPrice %>% filter(Fecha2 == "2018-10-31" | Fecha2 == "2019-03-31")
-#DosFB <- StreetPrice %>% filter(Fecha == "2018-10-31T00:00:00" | Fecha == "2019-03-31T00:00:00")# Esta es una fecha que el sistema utiliza para una carga, ignorar
-
-head(DosF)
-table(DosFB$Fecha2)
-
-head(DosFB)
-
-
+StreetPrice <- read.csv(file = "Data/Street Prices CRE May 2018 - May 2020.csv", 
+                        header = FALSE, col.names = Colnom, encoding = "UTF-8")
+DosF <-  StreetPrice %>% filter(Fecha2 == "2018-10-19")
+#DosFB <- StreetPrice %>% filter(Fecha == "2018-10-31T00:00:00" | Fecha == "2019-03-31T00:00:00") # Esta es una fecha que el sistema utiliza para una carga, ignorar
+Perm <-"PL/3717/EXP/ES/2015"
+Fech <- "2020-03-18"
+PL3717 <- StreetPrice %>% filter(Permiso == Perm & Fecha2 == Fech)
+Permisos <-unique(StreetPrice$Permiso)
+write.csv(x = PL3717, file = "Permisos.csv")
 DosF <- DosF %>% select(-N, Fecha)
-
-head(DosF)
-
 write.csv(x = DosF, file = "DF20181031_20190331.csv")
 
+#############################################################
+##############      Loop para hacerlo legible     ###########
+#############################################################
+setwd("Data/Bases Manejables/")
+j = 1   #recordar resetear j = 1
+for (i in 1:21) {
+  print(i)
+  print(j)
+  temp      <- StreetPrice[j:(j+1000000),]
+  print(head(temp, 1))
+  print(tail(temp, 1))
+  j         <- j + 1000000
+  print(j)
+  Principio <- head(temp$Fecha2, n = 1)
+  Fin       <- tail(temp$Fecha2, n = 1)
+  fecha     <- str_c(Principio, Fin, sep = "_")
+  name      <- str_c("Base_", fecha)
+  print(name)
+  write.csv(x = temp, file = name)
+}
+
+temp <-StreetPrice[21000001:nrow(StreetPrice), ]
+Principio <- head(temp$Fecha2, n = 1)
+Fin       <- tail(temp$Fecha2, n = 1)
+fecha     <- str_c(Principio, Fin, sep = "_")
+name      <- str_c("Base_", fecha)
+print(name)
+write.csv(x = temp, file = name)
+
+##############################################################
+#####       Base Costco     ################################
+##############################################################
+
+StreetPrice %>% filter()
+
+G2018 <-  StreetPrice %>% filter(year(Fecha2) == "2018")
+#empatarlo con las direcciones
+head(GasDF) #CRE_Id
+HEAD(G2018) #
+#unificar el nombre de la variable por la que se unen
+full_join(G2018, GasDf, by ="")
+
+#Base sólo con los permisos de costco
+VCostco <- c("PL/20238/EXP/ES/2017","PL/21005/EXP/ES/2018", "PL/21114/EXP/ES/2018","PL/21361/EXP/ES/2018",
+             "PL/21361/EXP/ES/2018","PL/21441/EXP/ES/2018","PL/21879/EXP/ES/2018","PL/22362/EXP/ES/2019",
+             "PL/22363/EXP/ES/2019","PL/22364/EXP/ES/2019","PL/23213/EXP/ES/2020")
+BCostco <- StreetPrice %>% filter(Permiso %in% VCostco )
+unique(BCostco$Permiso)# 5: PL/20238/EXP/ES/2017 PL/21005/EXP/ES/2018 PL/21114/EXP/ES/2018 PL/21441/EXP/ES/2018 PL/21879/EXP/ES/2018
+unique(BCostco$Estado)#Sinaloa              Coahuila de Zaragoza Guanajuato           Baja California      Coahuila de Zaragoz  Puebla      
+#unir con los datos georeferenciados
+#Buscar estaciones que Tengan costco en el nombre, GasDF tiene 1279 estaciones
+
+Loccostco <- GasDF %>% filter(CRE_Id %in% VCostco)# son 10 3 de ellas sin coordenadas, 3 permisos de 2019, un permiso de 2020
+
+colnames(Loccostco)[2] <- "Permiso"
+#juntar las bases
+CLCostco <- full_join(x = Loccostco, y = BCostco, "Permiso")
+head(CLCostco)
 
 
 
 
 
 
+#Bases que sólo tienen una entrada
+UnaE <- c("PL/21361/EXP/ES/2018", "PL/22362/EXP/ES/2019", "PL/22363/EXP/ES/2019",  "PL/22364/EXP/ES/2019", "PL/23213/EXP/ES/2020" )
+StreetPrice$Fecha2 <- ymd(StreetPrice$Fecha2) #transformando de factor a fecha 
+BCostco$Fecha2 <- ymd(BCostco$Fecha2)#cambiar a algo que funcione como fecha
+write.csv(x = BCostco, file = "Data/Base_Costco.csv")
+Regular <- BCostco %>% filter(Tipo2 == "Regular")
 
-table(DosF$Fecha2)
-temp <- DosF %>% spread(key= "Tipo2", value = "N")
-temp <-  spread(data = DosF, key = "Tipo2", value = "Precio")
+library(ggthemes)
 
+g <- ggplot(Regular, aes(Permiso, Precio))
 
-res <- dcast(melt(DosF, id.vars = "Permiso")[ value != "" ], record_numb ~ variable)
+#Boxplot básico
 
+g+geom_boxplot()
 
+library(ggfortify)
+install.packages(ggfortify)
+theme_set(theme_classic())
 
-
-head(temp)
-
-library(reshape)
-
-colnames(temp)
-melt(temp, id.vars = "Permiso", measure.vars = c("Diesel","Premium", "Regular"))
-
-
-x = data.frame(
-  id   = c(1, 1, 2, 2),
-  blue = c(1, 0, 1, 0),
-  red  = c(0, 1, 0, 1)
-)
+ggplot(mpg, aes(cty, hwy)) + geom_point() + facet_grid(year ~.)
 
 
 
-melt(data = x, id.vars = "id", measure.vars = c("blue", "red"))
+table(BCostco$Fecha2)
+#BCostco %>% filter(Fecha2 >= "2020-03-01" & Tipo2 == "Regular") %>% #reduzcamoslo a un periodo reciente 
+BCostco  %>% filter(Fecha2 >= "2020-02-15") %>%
+  ggplot(aes(x=Fecha2, y = Precio, col = Municipio)) + 
+  geom_line () + facet_grid(Tipo2 ~.) 
+
+#vector con los municipios de los que queremos obtener un promedio 
+unique(BCostco$Municipio )
+table(BCostco$Municipio )
+
+VMun <- c("Celaya", "Culiacán", "Mexicali", "Puebla", "Saltillo")
+
+class(BCostco$Fecha2)
+
+#Base general para 
+
+PromMun <- StreetPrice %>% filter(Fecha2 >= "2020-02-15" & Municipio %in% VMun & Tipo2 == "Regular") %>% 
+  group_by(Municipio, Fecha2) %>%
+  summarise(PromMun = mean(Precio)) 
 
 
 
-head(temp)
+  
+#graficar Promedios Municipales contra CostCo
+#O diferencia del precio de costco respecto al promedio
+#O un lag en el cambio de precio 
+#Buscar incluir el precio de la TAR
+#Pedir datos de TAR a la CRE
 
-spread()
+#Base de isocronas
+StreetPrice <- StreetPrice %>% select(-N, -Fecha)
+library(readxl)
+library(stringr)
+
+ISO <-read_xlsx(path = "Data/Intersect_IsocronasCostco_EstacionesServicio (1).xlsx")
+ISOID <- ISO %>% select(ID) #son 1704
+temp <- sapply(X = ISOID, FUN = as.character)
+temp <- as.character(temp)
+
+StreetPrice$Permiso
+ISOID <-as.character(x = ISOID)
+ISOBase <- StreetPrice %>% filter(Permiso %in% temp)
+head(ISOBase)
+write.csv(x = ISOBase, file = "Data/Bases Manejables/ISOBASE.csv")
 
 
-head(DosF)
+#tal vez contra promedios municipales
+#o contra promedios nacionales, análisis de la varianza nacional
+#variaciones del precio como %
+#respuesta de entrada a un competidor
+#mapa con la primera entrada
+#cambios en la utilidad promedio 
+#como se ve el promedio municipal.
+#comparar con los promedios municipales 
+
+library(leaflet)
+
+head(BCostco)
+uniqueBCostco
+colnames(CLCostco)
+unique(CLCostco$Permiso)[2]
+CLCostco %>% select(Permiso, Y_Coord, X_Coord) %>% unique()
 
 
-table(DosF$Permiso)
+leaflet() %>% 
+  addTiles() %>% 
+  #addMarkers(lng= -107.4252 , lat = 24.79775, popup = "Gasolinera de Costco") %>%
+  addCircleMarkers(lng= -107.4252 , lat = 24.79775, radius = 200) 
 
 
 
 
-table(StreetPrice$Compañia)
-head(DosF)
+#graficado contra tiempo
+#variaciones respecto a la media 
+
+#normalización básica 
 
 
-           
-table(StreetPrice$Fecha2)
 
+
+ggplot(Re)
+
+
+
+#alguna forma de normalizar el precio 
+
+
+
+
+
+
+#Tienen la misma extraté, variaciones de precio a lo largo de los meses
+
+#Obtener TAR
+#Polígonos de los Sam
+#subsetear para un mes o un año
+
+
+#semestres para la base de datos
+#cuatro escenarios de precios
+#465 estaciones de servicio
+#polígono de referencia alrededor de la tienda
+#revisar de las estaciones alrededor del polígono
+#9 de estaciones de servicio Soriana
+#Donde están situadas
 #heatmaps de estados
 #heatmaps de fechas
 #heatmaps de mapa de la república, tal vez sólo de ciudad de México
+#Dos fechas que nos interesan
+# 31 octubre 2018
+# 31 marzo de 2019
+#periodo de dos meses
+#datos básicos en un notepad
+#8 fechas
+#estaciones de servicio de Costco
+#Costco como empresa pública tal vez muestre cuanto obtiene por gasolinas en México
+#walmart hace sus propios polígonos
+
+
+#Melt de bases de datos
+
+temp <- DosF %>% spread(key= "Tipo2", value = "N")
+temp <-  spread(data = DosF, key = "Tipo2", value = "Precio")
+res <- dcast(melt(DosF, id.vars = "Permiso")[ value != "" ], record_numb ~ variable)
+melt(temp, id.vars = "Permiso", measure.vars = c("Diesel","Premium", "Regular"))
+melt(data = x, id.vars = "id", measure.vars = c("blue", "red"))
+
+#La apertura de las gasolinas ha disminuido los precios?
+
+Es difícil determinar la baja de los precios ya que depende de múltiples factores 
+
+
+
 

@@ -1,0 +1,50 @@
+---
+title: "Análisis Preeliminar de Precios en Gasolinas Grupo Costco"
+author: "Rodrigo Arturo Franco Fuentes"
+date: "May 29, 2020"
+output: slidy_presentation
+---
+
+```{r setup, include=FALSE, cache = TRUE}
+library(tidyverse)
+library(lubridate)
+#library(ggthemes)
+ knitr::opts_chunk$set(echo = FALSE)
+BCostco <- read.csv(file = "Data/Base_Costco.csv")
+```
+
+## Análisis de Gasolineras
+Utilizamos datos diarios de gasolina de la CRE junto con la georeferencia de las gasolineras. Este análisis se limita  a 5 gasolineras de Costco para las que tenemos datos. Existen otras 5 gasolineras registradas para las que no tenemos datos
+
+Tenemos tres tipos de combustible, Magnum, Premium, Diesel. 
+
+No conocemos el valor del volumen vendido. 
+
+Sólo venden gasolina, no hay diesel. 
+
+```{r Precios, cache = TRUE}
+#sólo cinco compañias con datos, tal vez tienen diez permisos para gasolineras que van a abrir en el futuro
+
+
+
+```
+
+
+## Hipótesis
+
+- Se adaptan a la competencia, o mantienen un margen de utilidad.  (Análisis de variación de precio)
+- 
+- Bullet 3
+
+## Slide with R Output
+
+```{r cars, echo = TRUE}
+summary(cars)
+```
+
+## Slide with Plot
+
+```{r pressure}
+plot(pressure)
+```
+
