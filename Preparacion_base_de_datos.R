@@ -1,6 +1,15 @@
 library(tidyverse)
 library(reshape)
 library(lubridate)
+library(ggthemes)
+library(ggfortify)
+library(readxl)
+library(stringr)
+library(leaflet)
+
+
+#######################################################################################################
+#######################################################################################################
 
 Colnom <-c("Compañia","Permiso", "Nombre Estación", 
            "Dirección", "Tipo", "Tipo2",
@@ -77,11 +86,6 @@ colnames(Loccostco)[2] <- "Permiso"
 CLCostco <- full_join(x = Loccostco, y = BCostco, "Permiso")
 head(CLCostco)
 
-
-
-
-
-
 #Bases que sólo tienen una entrada
 UnaE <- c("PL/21361/EXP/ES/2018", "PL/22362/EXP/ES/2019", "PL/22363/EXP/ES/2019",  "PL/22364/EXP/ES/2019", "PL/23213/EXP/ES/2020" )
 StreetPrice$Fecha2 <- ymd(StreetPrice$Fecha2) #transformando de factor a fecha 
@@ -89,23 +93,41 @@ BCostco$Fecha2 <- ymd(BCostco$Fecha2)#cambiar a algo que funcione como fecha
 write.csv(x = BCostco, file = "Data/Base_Costco.csv")
 Regular <- BCostco %>% filter(Tipo2 == "Regular")
 
-library(ggthemes)
-
-g <- ggplot(Regular, aes(Permiso, Precio))
-
-#Boxplot básico
-
-g+geom_boxplot()
-
-library(ggfortify)
-install.packages(ggfortify)
 theme_set(theme_classic())
-
 ggplot(mpg, aes(cty, hwy)) + geom_point() + facet_grid(year ~.)
+#######################################################################################################
+################          Nuevo Subset      ##################################
+
+SS <- read_xlsx(path = "Data/Costco_EstacionesServicio subsetsubset.xlsx")
+ISOID <- SS %>% select(ID) #son 1704
+temp <- sapply(X = ISOID, FUN = as.character)
+temp <- as.character(temp)
 
 
+StreetPrice$Permiso
+ISOID <-as.character(x = ISOID)
 
-table(BCostco$Fecha2)
+table(ISOBase$Tipo2)
+
+ISOBase <- StreetPrice %>% filter(Permiso %in% temp & Tipo2 %in% c("Premium", "Regular"))
+
+write.csv(x = ISOBase, file = "Data/Bases Manejables/Subset_20200601.csv")
+
+head(temp)
+#######################################################################################################
+# Nuevo Subset Jaime  2020_06_03
+
+EstF <- read_xlsx(path = "Data/est faltantes (Costco) 2020 06 03 v1.xlsx") #24 filas
+ISOID <- EstF[1]
+temp <- sapply(X = ISOID, FUN = as.character)
+temp <- as.character(temp)
+
+EstF <- StreetPrice %>% filter(Permiso %in% temp)
+
+write.csv(x = EstF, file = "Estaciones Faltantes 2020 06 03.csv")
+
+
+#######################################################################################################
 #BCostco %>% filter(Fecha2 >= "2020-03-01" & Tipo2 == "Regular") %>% #reduzcamoslo a un periodo reciente 
 BCostco  %>% filter(Fecha2 >= "2020-02-15") %>%
   ggplot(aes(x=Fecha2, y = Precio, col = Municipio)) + 
@@ -114,18 +136,10 @@ BCostco  %>% filter(Fecha2 >= "2020-02-15") %>%
 #vector con los municipios de los que queremos obtener un promedio 
 unique(BCostco$Municipio )
 table(BCostco$Municipio )
-
 VMun <- c("Celaya", "Culiacán", "Mexicali", "Puebla", "Saltillo")
-
-class(BCostco$Fecha2)
-
-#Base general para 
-
 PromMun <- StreetPrice %>% filter(Fecha2 >= "2020-02-15" & Municipio %in% VMun & Tipo2 == "Regular") %>% 
   group_by(Municipio, Fecha2) %>%
   summarise(PromMun = mean(Precio)) 
-
-
 
   
 #graficar Promedios Municipales contra CostCo
@@ -134,10 +148,10 @@ PromMun <- StreetPrice %>% filter(Fecha2 >= "2020-02-15" & Municipio %in% VMun &
 #Buscar incluir el precio de la TAR
 #Pedir datos de TAR a la CRE
 
+#######################################################################################################
+#######################################################################################################
 #Base de isocronas
 StreetPrice <- StreetPrice %>% select(-N, -Fecha)
-library(readxl)
-library(stringr)
 
 ISO <-read_xlsx(path = "Data/Intersect_IsocronasCostco_EstacionesServicio (1).xlsx")
 ISOID <- ISO %>% select(ID) #son 1704
@@ -160,7 +174,7 @@ write.csv(x = ISOBase, file = "Data/Bases Manejables/ISOBASE.csv")
 #como se ve el promedio municipal.
 #comparar con los promedios municipales 
 
-library(leaflet)
+
 
 head(BCostco)
 uniqueBCostco
@@ -171,7 +185,7 @@ CLCostco %>% select(Permiso, Y_Coord, X_Coord) %>% unique()
 
 leaflet() %>% 
   addTiles() %>% 
-  #addMarkers(lng= -107.4252 , lat = 24.79775, popup = "Gasolinera de Costco") %>%
+  addMarkers(lng= -107.4252 , lat = 24.79775, popup = "Gasolinera de Costco") %>%
   addCircleMarkers(lng= -107.4252 , lat = 24.79775, radius = 200) 
 
 
