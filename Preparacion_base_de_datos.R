@@ -2,22 +2,45 @@ library(tidyverse)
 library(reshape)
 library(lubridate)
 library(ggthemes)
-library(ggfortify)
+#library(ggfortify)# no está instalado aún, no queda claro que se vaya a ocupar
 library(readxl)
 library(stringr)
 library(leaflet)
 
-
 #######################################################################################################
 #######################################################################################################
-
 Colnom <-c("Compañia","Permiso", "Nombre Estación", 
            "Dirección", "Tipo", "Tipo2",
            "Precio", "Fecha", "Estado", 
            "Municipio", "Fecha2", "N")
 StreetPrice <- read.csv(file = "Data/Street Prices CRE May 2018 - May 2020.csv", 
                         header = FALSE, col.names = Colnom, encoding = "UTF-8")
-DosF <-  StreetPrice %>% filter(Fecha2 == "2018-10-19")
+########################################################################################
+#Subset del 20200604
+PERM <- read_xlsx(path = "Data/Permisos CRE para BASE 2020 06 03 v1.xlsx", 
+                  col_names = FALSE)
+#16 oct 18, 12 mar 19, 10 mar 20
+fechas <- c("2018-08-18","2019-03-12","2020-03-10")
+fechas <- ymd(fechas)
+
+temp <- sapply(X = PERM, FUN = as.character)
+temp <- as.character(temp)
+StreetPrice$Fecha2 <- ymd(StreetPrice$Fecha2) #para cambiar esta columna a tipo fecha 
+
+ISOBase <- StreetPrice %>% 
+  filter(Permiso %in% temp ) %>%
+  filter( Tipo2 %in% c("Premium", "Regular")) %>%
+  filter( Fecha2 %in% fechas)
+
+ISOBase <- ISOBase %>% select(-Fecha, -N,)
+
+write.csv(x = ISOBase, file = "Subset_2020_06_04.csv")
+
+
+
+
+
+  DosF <-  StreetPrice %>% filter(Fecha2 == "2018-10-19")
 #DosFB <- StreetPrice %>% filter(Fecha == "2018-10-31T00:00:00" | Fecha == "2019-03-31T00:00:00") # Esta es una fecha que el sistema utiliza para una carga, ignorar
 Perm <-"PL/3717/EXP/ES/2015"
 Fech <- "2020-03-18"
