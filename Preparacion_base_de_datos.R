@@ -19,12 +19,11 @@ StreetPrice <- read.csv(file = "Data/Street Prices CRE May 2018 - May 2020.csv",
 #Subset del 20200604
 PERM <- read_xlsx(path = "Data/Permisos CRE para BASE 2020 06 03 v1.xlsx", 
                   col_names = FALSE)
+
 #16 oct 18, 12 mar 19, 10 mar 20
 fechas <- c("2018-08-18","2019-03-12","2020-03-10")
 fechas <- ymd(fechas)
 
-temp <- sapply(X = PERM, FUN = as.character)
-temp <- as.character(temp)
 StreetPrice$Fecha2 <- ymd(StreetPrice$Fecha2) #para cambiar esta columna a tipo fecha 
 
 ISOBase <- StreetPrice %>% 
@@ -36,11 +35,22 @@ ISOBase <- ISOBase %>% select(-Fecha, -N,)
 
 write.csv(x = ISOBase, file = "Subset_2020_06_04.csv")
 
+#Otro subset del 20200604
+PERM <- read_xlsx(path = "Entregas/Faltantes Leon y Toluca.xlsx", col_names = FALSE)
+temp <- sapply(X = PERM, FUN = as.character)
+temp <- as.character(temp)
+
+ISOBase <- StreetPrice %>% 
+  filter(Permiso %in% temp ) %>%
+  filter( Tipo2 %in% c("Premium", "Regular"))
+
+ISOBase <- ISOBase %>% select(-Fecha, -N,)
+
+write.csv(x = ISOBase, file = "Subset_2020_06_04_Dos_Leon_Toluca.csv")
 
 
 
-
-  DosF <-  StreetPrice %>% filter(Fecha2 == "2018-10-19")
+DosF <-  StreetPrice %>% filter(Fecha2 == "2018-10-19")
 #DosFB <- StreetPrice %>% filter(Fecha == "2018-10-31T00:00:00" | Fecha == "2019-03-31T00:00:00") # Esta es una fecha que el sistema utiliza para una carga, ignorar
 Perm <-"PL/3717/EXP/ES/2015"
 Fech <- "2020-03-18"
