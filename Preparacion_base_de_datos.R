@@ -8,20 +8,68 @@ library(stringr)
 library(leaflet)
 
 #######################################################################################################
+#Tenemos dos bases de datos
+#1. El scratcheo de los datos de CRE, que contiene dos gasolinas y diesel, diariamente para cada permisionario.
+#2. El archivo con los precios en TAR. Que contiene los precios diarios para cada Terminal de Administración y R
+
 #######################################################################################################
+########################            Archivo de TAR´s
+TAR <- read.csv(file =  "Data/Precios diarios TAR/PrecioDeVentaEnTAR.csv", skip = 1, header = FALSE, sep = ",")
+
+#######   Dos tipos de gasolina
+#################    REGULAR
+Regular <- select( TAR, "V1":"V78")
+Regular <- Regular[-c(1,2),]
+colnames(Regular) <- Regular[1,]
+Regular <- Regular[-1, ]
+colnames(Regular)[1] <- "Fecha"
+temp <-as.data.frame(t(as.matrix(Regular)))
+
+
+
+
+write.csv(x = Regular, file = "Data/TAR_Regular_May2020.csv")
+head(gather(data = Regular,key = "Fecha", value = "n", 2:length(Regular) ))
+colnames(Regular)
+
+temp <- t(as.matrix(Regular[,c(1,2)]))
+
+tidyr::gather(cases,"year", "n", 2:4)
+
+##################   PREMIUM
+Premium <- select( TAR, "V80":"V157")
+Premium <- Premium[-c(1,2),]
+
+#######################################################################################################
+#Archivo de scratcheo 
 Colnom <-c("Compañia","Permiso", "Nombre Estación", 
            "Dirección", "Tipo", "Tipo2",
            "Precio", "Fecha", "Estado", 
            "Municipio", "Fecha2", "N")
 StreetPrice <- read.csv(file = "Data/Street Prices CRE May 2018 - May 2020.csv", 
                         header = FALSE, col.names = Colnom, encoding = "UTF-8")
+##########################################################
+
+
+
 ########################################################################################
 #Subset del 20200604
 PERM <- read_xlsx(path = "Data/Permisos CRE para BASE 2020 06 03 v1.xlsx", 
                   col_names = FALSE)
+temp <- sapply(X = PERM, FUN = as.character)
+temp <- as.character(temp)
 
 #16 oct 18, 12 mar 19, 10 mar 20
 fechas <- c("2018-08-18","2019-03-12","2020-03-10")
+
+
+#Subset del 20200605
+temp <- sapply(X = PERM, FUN = as.character)
+temp <- as.character(temp)
+
+#30-Nov-19, 11-Feb-20, 22-Apr-20,19-May-20,
+
+fechas <- c("2019-11-30","2020-02-11","2020-04-22","2020-05-19")
 fechas <- ymd(fechas)
 
 StreetPrice$Fecha2 <- ymd(StreetPrice$Fecha2) #para cambiar esta columna a tipo fecha 
@@ -32,8 +80,9 @@ ISOBase <- StreetPrice %>%
   filter( Fecha2 %in% fechas)
 
 ISOBase <- ISOBase %>% select(-Fecha, -N,)
-
-write.csv(x = ISOBase, file = "Subset_2020_06_04.csv")
+table(ISOBase$Fecha2)
+head(ISOBase)
+write.csv(x = ISOBase, file = "Subset_2020_06_05.csv")
 
 #Otro subset del 20200604
 PERM <- read_xlsx(path = "Entregas/Faltantes Leon y Toluca.xlsx", col_names = FALSE)
@@ -248,8 +297,6 @@ ggplot(Re)
 #Obtener TAR
 #Polígonos de los Sam
 #subsetear para un mes o un año
-
-
 #semestres para la base de datos
 #cuatro escenarios de precios
 #465 estaciones de servicio
@@ -271,18 +318,17 @@ ggplot(Re)
 #walmart hace sus propios polígonos
 
 
-#Melt de bases de datos
+#gather de bases de datos
 
 temp <- DosF %>% spread(key= "Tipo2", value = "N")
 temp <-  spread(data = DosF, key = "Tipo2", value = "Precio")
-res <- dcast(melt(DosF, id.vars = "Permiso")[ value != "" ], record_numb ~ variable)
-melt(temp, id.vars = "Permiso", measure.vars = c("Diesel","Premium", "Regular"))
-melt(data = x, id.vars = "id", measure.vars = c("blue", "red"))
+#res <- dcast(melt(DosF, id.vars = "Permiso")[ value != "" ], record_numb ~ variable)
+gather(data = )
+
+
+#melt(temp, id.vars = "Permiso", measure.vars = c("Diesel","Premium", "Regular"))
+#melt(data = x, id.vars = "id", measure.vars = c("blue", "red"))
 
 #La apertura de las gasolinas ha disminuido los precios?
 
-Es difícil determinar la baja de los precios ya que depende de múltiples factores 
-
-
-
-
+#Es difícil determinar la baja de los precios ya que depende de múltiples factores 
